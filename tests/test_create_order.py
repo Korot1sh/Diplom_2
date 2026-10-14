@@ -1,7 +1,7 @@
 import allure
 import requests
 
-BASE_URL = "https://qa-stellarburgers.education-services.ru"
+from tests.constants import BASE_URL, ORDERS_ENDPOINT
 
 
 @allure.feature("Создание заказа")
@@ -10,9 +10,9 @@ class TestCreateOrder:
     @allure.title("Авторизованный пользователь может создать заказ с ингредиентами")
     def test_create_order_authorized(self, token, ingredients):
         response = requests.post(
-            f"{BASE_URL}/api/orders",
+            f"{BASE_URL}{ORDERS_ENDPOINT}",
             headers={"Authorization": token},
-            json={"ingredients": ingredients},
+            json={"ingredients": [item["_id"] for item in ingredients]},
             timeout=20,
         )
 
@@ -26,8 +26,8 @@ class TestCreateOrder:
     @allure.title("Неавторизованный пользователь может создать заказ")
     def test_create_order_without_authorization(self, ingredients):
         response = requests.post(
-            f"{BASE_URL}/api/orders",
-            json={"ingredients": ingredients},
+            f"{BASE_URL}{ORDERS_ENDPOINT}",
+            json={"ingredients": [item["_id"] for item in ingredients]},
             timeout=20,
         )
 
@@ -41,7 +41,7 @@ class TestCreateOrder:
     @allure.title("Можно создать заказ без ингредиентов")
     def test_create_order_without_ingredients(self, token):
         response = requests.post(
-            f"{BASE_URL}/api/orders",
+            f"{BASE_URL}{ORDERS_ENDPOINT}",
             headers={"Authorization": token},
             json={"ingredients": []},
             timeout=20,
@@ -56,13 +56,9 @@ class TestCreateOrder:
     @allure.title("Нельзя создать заказ с неверным хешем ингредиента")
     def test_create_order_invalid_ingredient_hash(self, token):
         response = requests.post(
-            f"{BASE_URL}/api/orders",
+            f"{BASE_URL}{ORDERS_ENDPOINT}",
             headers={"Authorization": token},
-            json={
-                "ingredients": [
-                    "invalid_ingredient_hash"
-                ]
-            },
+            json={"ingredients": ["invalid_ingredient_hash"]},
             timeout=20,
         )
 

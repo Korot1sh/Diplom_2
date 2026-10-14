@@ -1,10 +1,7 @@
 import allure
 import requests
 
-from tests.conftest import BASE_URL
-
-
-ORDERS_ENDPOINT = "/api/orders"
+from tests.constants import BASE_URL, ORDERS_ENDPOINT
 
 
 @allure.epic("Stellar Burgers API")
@@ -12,12 +9,14 @@ ORDERS_ENDPOINT = "/api/orders"
 class TestGetUserOrders:
     @allure.title("Получение заказов авторизованного пользователя")
     def test_get_user_orders_with_authorization(self, created_user, ingredients):
-        _, access_token = created_user
+        _, access_token, registration_response = created_user
+
+        assert registration_response.status_code == 200
 
         order_response = requests.post(
             f"{BASE_URL}{ORDERS_ENDPOINT}",
             headers={"Authorization": access_token},
-            json={"ingredients": ingredients},
+            json={"ingredients": [item["_id"] for item in ingredients]},
             timeout=20,
         )
         assert order_response.status_code == 200

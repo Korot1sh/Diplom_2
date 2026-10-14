@@ -1,7 +1,8 @@
 import allure
 import requests
 
-from tests.conftest import BASE_URL, LOGIN_ENDPOINT
+from tests.constants import BASE_URL, LOGIN_ENDPOINT
+from tests.helpers import login_user
 
 
 @allure.epic("Stellar Burgers API")
@@ -9,17 +10,12 @@ from tests.conftest import BASE_URL, LOGIN_ENDPOINT
 class TestLoginUser:
     @allure.title("Логин под существующим пользователем")
     def test_login_existing_user(self, created_user):
-        user, _ = created_user
+        user, _, registration_response = created_user
+
+        assert registration_response.status_code == 200
 
         with allure.step("Авторизоваться существующими данными"):
-            response = requests.post(
-                f"{BASE_URL}{LOGIN_ENDPOINT}",
-                json={
-                    "email": user["email"],
-                    "password": user["password"],
-                },
-                timeout=20,
-            )
+            response = login_user(user)
 
         assert response.status_code == 200
         body = response.json()
@@ -31,7 +27,9 @@ class TestLoginUser:
 
     @allure.title("Логин с неверным логином и паролем")
     def test_login_with_invalid_credentials(self, created_user):
-        user, _ = created_user
+        user, _, registration_response = created_user
+
+        assert registration_response.status_code == 200
 
         with allure.step("Отправить неверные email и password"):
             response = requests.post(

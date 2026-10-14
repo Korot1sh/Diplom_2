@@ -2,41 +2,35 @@ import allure
 import pytest
 import requests
 
-from tests.conftest import BASE_URL, REGISTER_ENDPOINT, unique_user, register_user
+from tests.constants import BASE_URL, REGISTER_ENDPOINT
+from tests.helpers import register_user, unique_user
 
 
 @allure.epic("Stellar Burgers API")
 @allure.feature("Создание пользователя")
 class TestCreateUser:
     @allure.title("Создание уникального пользователя")
-    def test_create_unique_user(self):
+    def test_create_unique_user(self, users_to_delete):
         user = unique_user()
 
-        access_token = None
-        try:
-            with allure.step("Создать уникального пользователя"):
-                response = register_user(user)
+        with allure.step("Создать уникального пользователя"):
+            response = register_user(user)
 
-            assert response.status_code == 200
-            body = response.json()
-            assert body["success"] is True
-            assert body["user"]["email"] == user["email"]
-            assert body["user"]["name"] == user["name"]
-            assert body["accessToken"]
-            assert body["refreshToken"]
-            access_token = body["accessToken"]
-        finally:
-            if access_token:
-                delete_response = requests.delete(
-                    f"{BASE_URL}/api/auth/user",
-                    headers={"Authorization": access_token},
-                    timeout=20,
-                )
-                assert delete_response.status_code in (200, 202), delete_response.text
+        assert response.status_code == 200
+        body = response.json()
+        assert body["success"] is True
+        assert body["user"]["email"] == user["email"]
+        assert body["user"]["name"] == user["name"]
+        assert body["accessToken"]
+        assert body["refreshToken"]
+
+        users_to_delete.append(body["accessToken"])
 
     @allure.title("Создание уже зарегистрированного пользователя")
     def test_create_existing_user(self, created_user):
-        user, _ = created_user
+        user, _, registration_response = created_user
+
+        assert registration_response.status_code == 200
 
         with allure.step("Повторно зарегистрировать пользователя"):
             response = register_user(user)
