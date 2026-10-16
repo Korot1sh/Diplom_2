@@ -1,8 +1,8 @@
 import allure
 import requests
 
-from tests.constants import BASE_URL, LOGIN_ENDPOINT
-from tests.helpers import login_user
+from constants import BASE_URL, LOGIN_ENDPOINT
+from helpers import login_user
 
 
 @allure.epic("Stellar Burgers API")
@@ -10,39 +10,29 @@ from tests.helpers import login_user
 class TestLoginUser:
     @allure.title("Логин под существующим пользователем")
     def test_login_existing_user(self, created_user):
-        user, _, registration_response = created_user
-
-        assert registration_response.status_code == 200
-
-        with allure.step("Авторизоваться существующими данными"):
-            response = login_user(user)
-
-        assert response.status_code == 200
+        user, _ = created_user
+        response = login_user(user)
         body = response.json()
-        assert body["success"] is True
-        assert body["user"]["email"] == user["email"]
-        assert body["user"]["name"] == user["name"]
-        assert body["accessToken"]
-        assert body["refreshToken"]
+
+        assert all((
+            response.status_code == 200,
+            body["success"] is True,
+            body["user"]["email"] == user["email"],
+            body["user"]["name"] == user["name"],
+            bool(body["accessToken"]),
+            bool(body["refreshToken"]),
+        ))
 
     @allure.title("Логин с неверным логином и паролем")
     def test_login_with_invalid_credentials(self, created_user):
-        user, _, registration_response = created_user
+        user, _ = created_user
+        response = requests.post(
+            f"{BASE_URL}{LOGIN_ENDPOINT}",
+            json={"email": f"wrong_{user['email']}", "password": "WrongPassword"},
+            timeout=20,
+        )
 
-        assert registration_response.status_code == 200
-
-        with allure.step("Отправить неверные email и password"):
-            response = requests.post(
-                f"{BASE_URL}{LOGIN_ENDPOINT}",
-                json={
-                    "email": f"wrong_{user['email']}",
-                    "password": "WrongPassword",
-                },
-                timeout=20,
-            )
-
-        assert response.status_code == 401
-        assert response.json() == {
-            "success": False,
-            "message": "email or password are incorrect",
-        }
+        assert (response.status_code, response.json()) == (
+            401,
+            {"success": False, "message": "email or password are incorrect"},
+        )

@@ -1,9 +1,8 @@
-import allure
 import pytest
 import requests
 
-from tests.constants import BASE_URL, INGREDIENTS_ENDPOINT
-from tests.helpers import delete_user, register_user, unique_user
+from constants import BASE_URL, INGREDIENTS_ENDPOINT
+from helpers import delete_user, register_user, unique_user
 
 
 @pytest.fixture
@@ -13,16 +12,15 @@ def created_user():
     body = response.json()
     access_token = body.get("accessToken")
 
-    yield user, access_token, response
+    yield user, access_token
 
     if access_token:
-        with allure.step("Удалить тестового пользователя"):
-            delete_user(access_token)
+        delete_user(access_token)
 
 
 @pytest.fixture
 def token(created_user):
-    _, access_token, _ = created_user
+    _, access_token = created_user
     return access_token
 
 
@@ -41,5 +39,4 @@ def users_to_delete():
     yield access_tokens
 
     for access_token in access_tokens:
-        with allure.step("Удалить тестового пользователя"):
-            delete_user(access_token)
+        delete_user(access_token)
