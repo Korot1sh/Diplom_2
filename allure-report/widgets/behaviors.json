@@ -1,0 +1,1 @@
+{"total":2,"items":[{"uid":"b9ede9cdea3ec7436187010dae6669bb","name":"Создание заказа","statistic":{"failed":0,"broken":0,"skipped":0,"passed":4,"unknown":0,"total":4}},{"uid":"794b24a9374aad4231471716f46b7a72","name":"Stellar Burgers API","statistic":{"failed":0,"broken":0,"skipped":0,"passed":4,"unknown":0,"total":4}}]}
